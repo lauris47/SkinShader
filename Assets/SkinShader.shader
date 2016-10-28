@@ -1,4 +1,6 @@
 ﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 // Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
 
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
@@ -71,40 +73,35 @@ Shader "My Shaders/Skin Shader"
 				float lightStrength;
 				//Vertex Vectors
 				float3 normalDirection = input.normalDirection; // input from vertex function
-				float3 lightPosition;
+				float3 lightPosition = normalize(_WorldSpaceLightPos0.xyz); //_WorldSpaceLightDir0 is predefined, so no need to inniciate it at the top, it's also normalized automatically
 				float3 cameraAngleToNormal = max(0.0, float3(1, 1, 1) - dot(normalDirection, _WorldSpaceCameraPos)); //Angle between face and camera. I want skin to be shiny when agnle is closer to 0, therefor I inveert it by subs, both in dot() are normalized before
 				float3 cameraToVertexAngle = normalize(_WorldSpaceCameraPos - input.posWorld); // Normalized vector length from vertex to camera. Not using defined before normalDirection, becasue I don't want to normalize it alone
 
-				//If light is directional
+				//For testing, DELETE
 				if (_WorldSpaceLightPos0.w == 0.0) {
-					lightStrength = 1;
-					lightPosition = normalize(_WorldSpaceLightPos0.xyz); //_WorldSpaceLightDir0 is predefined, so no need to inniciate it at the top, it's also normalized automatically
-				}
-				else {
-					distance = length(_WorldSpaceLightPos0.xyz - input.posWorld);
-					lightStrength = 1 / distance;
-					lightPosition = normalize(_WorldSpaceLightPos0.xyz - input.posWorld);
+					lightStrength = 0.1;
+					lightPosition = normalize(_WorldSpaceLightPos0.xyz);
 				}
 
 				//Lighting
-				float3 diffuseShading = lightStrength * _LightColor0.xyzw * max(0.0, dot(normalDirection, lightPosition)); //Values from 0 to 1 with max() help. dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
-				float3 specularReflection = lightStrength * max(0.0, dot(normalDirection, lightPosition) * pow(dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle), _Shininess));
+				float3 diffuseShading = _LightColor0.xyzw * max(0.0, dot(normalDirection, lightPosition)); //Values from 0 to 1 with max() help. dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
+				float3 specularReflection = max(0.0, dot(normalDirection, lightPosition) * pow(dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle), _Shininess));
 
 				//max(0.0, dot(normalDirection, lightPosition)) * pow(max(0.0, dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle)), _Shininess);
 				// To make skin shine against light source
 
 				float3 skinAgainstLightShine = max(0.0, cameraAngleToNormal *  dot(lightPosition, normalDirection)); //Fix: shine oposite the light still appears
 				float3 lightFinal = diffuseShading  + specularReflection;
-				return float4(_Color* lightFinal + UNITY_LIGHTMODEL_AMBIENT/*+ skinAgainstLightShine Specular light does almost the same*/, 1.0); // Color is normal direction multiplied by world position of object in its local position.
+				return float4(_Color * lightFinal + UNITY_LIGHTMODEL_AMBIENT/*+ skinAgainstLightShine Specular light does almost the same*/, 1.0); // Color is normal direction multiplied by world position of object in its local position.
 
 			}
 			ENDCG
 
 		}
-		
+		//For spot Light
 		Pass{
 			Tags{ "LightMode" = "ForwardAdd" }
-			Blend One One
+			Blend One Zero
 
 			CGPROGRAM
 			#pragma vertex vort
@@ -117,8 +114,6 @@ Shader "My Shaders/Skin Shader"
 
 			float4 lightDir0;
 			float lightStrength;
-
-
 
 			float4 _LightColor0;
 
@@ -137,40 +132,45 @@ Shader "My Shaders/Skin Shader"
 				vertexOut output;
 
 				output.normalDirection = normalize(mul(input.normal, unity_WorldToObject)); 
-				output.posWorld = mul(unity_ObjectToWorld, input.vertexPos);
+				output.posWorld = normalize(mul(unity_ObjectToWorld, input.vertexPos));
 				output.pos = mul(UNITY_MATRIX_MVP, input.vertexPos); 
-
 
 				return output;
 			}
 
-
 			float4 frog(vertexOut input) : COLOR{
 			
-				float distance;
+				float lightDistance;
 				float lightStrength;
 				float3 normalDirection = input.normalDirection; 
 				float3 lightPosition;
-				float3 cameraAngleToNormal = max(0.0, float3(1, 1, 1) - dot(normalDirection, _WorldSpaceCameraPos)); 
+				float3 cameraAngleToNormal = max(0.0, float3(1, 1, 1) - normalize(dot(normalDirection, _WorldSpaceCameraPos))); 
 				float3 cameraToVertexAngle = normalize(_WorldSpaceCameraPos - input.posWorld); 
 														
-				if (_WorldSpaceLightPos0.w == 0.0) {
+				if (!_WorldSpaceLightPos0.w == 0.0) {
+
+					lightDistance = length(_WorldSpaceLightPos0.xyz - mul(unity_ObjectToWorld, input.posWorld));
+					lightStrength = 1 / lightDistance;
+					lightPosition = normalize(_WorldSpaceLightPos0.xyz - mul(unity_ObjectToWorld, input.posWorld));
+
+					/*
+					float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - mul(_Object2World, input.vertex).xyz;
+					float distance = length(vertexToLightSource);
+					attenuation = 1.0 / distance; // linear attenuation 
+					lightDirection = normalize(vertexToLightSource);*/
+				}
+				else {
+					//This will never execute
 					lightStrength = 1;
 					lightPosition = normalize(_WorldSpaceLightPos0.xyz);
 				}
-				else {
-					distance = length(_WorldSpaceLightPos0.xyz - input.posWorld);
-					lightStrength = 1 / distance;
-					lightPosition = normalize(_WorldSpaceLightPos0.xyz - input.posWorld);
-				}
 
-				float3 diffuseShading = lightStrength * _LightColor0.xyzw * max(0.0, dot(normalDirection, lightPosition));
-				float3 specularReflection = lightStrength * max(0.0, dot(normalDirection, lightPosition) * pow(dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle), _Shininess));
-				float3 skinAgainstLightShine = max(0.0, cameraAngleToNormal * dot(lightPosition, normalDirection)); 
-				float3 lightFinal = diffuseShading  + specularReflection;
+				float3 diffuseShading = _LightColor0.xyzw * max(0.0, dot(normalDirection, lightPosition));
+				float3 specularReflection =max(0.0, dot(normalDirection, lightPosition) * pow(dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle), _Shininess));
+				//float3 skinAgainstLightShine =  max(0.0, cameraAngleToNormal * dot(lightPosition, normalDirection));
+				float3 lightFinal = diffuseShading + specularReflection;
 
-				return float4(_Color *  lightFinal, 1.0);
-
+				return float4(_Color * lightFinal * lightStrength, 1.0);
 			}
 				ENDCG
 			}
