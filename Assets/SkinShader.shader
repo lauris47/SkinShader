@@ -17,7 +17,10 @@ Shader "My Shaders/Skin Shader"
 		_Color("Color", Color) = (1.0, 0.8, 0.6, 1) //Main color will be simmilar Skin Color by default
 		_Specular("Specular Color", Color) = (0.9, 0.5, 0.4, 1) //Main color will be simmilar Skin Color by default
 		_Shininess("Shininess", Range(0.1,10)) = 5
+		_Transparency("Transparency", Range(0.1,10)) = 5
+		_TransparetCut("TransparetCut", Range(-1,1)) = 1
 		_Texture("Texture",2D) = "White" {}
+
 	}
 		SubShader{
 		Pass {
@@ -44,6 +47,7 @@ Shader "My Shaders/Skin Shader"
 			struct vertexIn {
 				float4 vertexPos : POSITION;
 				float4 normal: NORMAL;
+				float2 texcoord : TEXCOORD0;
 			};
 			//Used as output for vertexShader function, they have to be defined in vertexShader function
 			struct vertexOut {
@@ -77,6 +81,7 @@ Shader "My Shaders/Skin Shader"
 				float3 cameraAngleToNormal = max(0.0, float3(1, 1, 1) - dot(normalDirection, _WorldSpaceCameraPos)); //Angle between face and camera. I want skin to be shiny when agnle is closer to 0, therefor I inveert it by subs, both in dot() are normalized before
 				float3 cameraToVertexAngle = normalize(_WorldSpaceCameraPos - input.posWorld); // Normalized vector length from vertex to camera. Not using defined before normalDirection, becasue I don't want to normalize it alone
 
+				//float4 textureColor = sampler2D(_Texture, input.normalDirection.xy);
 				//For testing, DELETE
 				if (_WorldSpaceLightPos0.w == 0.0) {
 					lightStrength = 0.1;
@@ -101,7 +106,7 @@ Shader "My Shaders/Skin Shader"
 		//For spot Light
 		Pass{
 			Tags{ "LightMode" = "ForwardAdd" }
-			Blend One Zero
+			Blend one Zero
 
 			CGPROGRAM
 			#pragma vertex vort
@@ -120,6 +125,7 @@ Shader "My Shaders/Skin Shader"
 			struct vertexIn {
 				float4 vertexPos : POSITION;
 				float4 normal: NORMAL;
+				float4 colorOfTexture: TEXCOORD0;
 			};
 
 			struct vertexOut {
@@ -131,7 +137,8 @@ Shader "My Shaders/Skin Shader"
 			vertexOut vort(vertexIn input) {
 				vertexOut output;
 
-				output.normalDirection = normalize(mul(input.normal, unity_WorldToObject)); 
+				output.normalDirection = input.colorOfTexture;
+				//output.normalDirection = normalize(mul(input.normal, unity_WorldToObject)); 
 				output.posWorld = normalize(mul(unity_ObjectToWorld, input.vertexPos));
 				output.pos = mul(UNITY_MATRIX_MVP, input.vertexPos); 
 
@@ -152,25 +159,20 @@ Shader "My Shaders/Skin Shader"
 					lightDistance = length(_WorldSpaceLightPos0.xyz - mul(unity_ObjectToWorld, input.posWorld));
 					lightStrength = 1 / lightDistance;
 					lightPosition = normalize(_WorldSpaceLightPos0.xyz - mul(unity_ObjectToWorld, input.posWorld));
-
-					/*
-					float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - mul(_Object2World, input.vertex).xyz;
-					float distance = length(vertexToLightSource);
-					attenuation = 1.0 / distance; // linear attenuation 
-					lightDirection = normalize(vertexToLightSource);*/
 				}
 				else {
 					//This will never execute
 					lightStrength = 1;
 					lightPosition = normalize(_WorldSpaceLightPos0.xyz);
 				}
+				float4 textureColor = tex2D(_Texture, input.normalDirection.xy);
 
-				float3 diffuseShading = _LightColor0.xyzw * max(0.0, dot(normalDirection, lightPosition));
-				float3 specularReflection =max(0.0, dot(normalDirection, lightPosition) * pow(dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle), _Shininess));
+				float3 diffuseShading = _LightColor0.xyzw * max(0.0, dot(normalDirection, lightPosition)) * lightStrength;
+				float3 specularReflection = max(0.0, dot(normalDirection, lightPosition) * pow(dot(reflect(-lightPosition, normalDirection), cameraToVertexAngle), _Shininess));
 				//float3 skinAgainstLightShine =  max(0.0, cameraAngleToNormal * dot(lightPosition, normalDirection));
 				float3 lightFinal = diffuseShading + specularReflection;
 
-				return float4(_Color * lightFinal * lightStrength, 1.0);
+				return float4(_Color * lightFinal * textureColor, 1.0);
 			}
 				ENDCG
 			}
@@ -179,3 +181,7 @@ Shader "My Shaders/Skin Shader"
 }
 
 
+//Call back
+//Call front
+//and then -normal
+// to make back faces als orenderey
