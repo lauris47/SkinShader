@@ -48,7 +48,6 @@ Shader "My Shaders/Skin Shader"
 
 			struct vertexIn {
 				float4 vertexPos : POSITION;
-
 				float4 colorOfTexture : TEXCOORD0;
 			};
 
