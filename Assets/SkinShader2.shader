@@ -71,12 +71,11 @@ Shader "My Shaders/Skin Shader 2" {
 		ENDCG
 		}
 
-			//Pass two, for other lights
-				Pass{
-				Tags{ "LightMode" = "ForwardBase" }
-				CGPROGRAM
+			Pass{
+			Tags{ "LightMode" = "ForwardBase" }
+			CGPROGRAM
 
-				float4 _Color;
+			float4 _Color;
 			float4 lightDirection;
 			float4 _specularColor;
 			float _specularRollof;
@@ -127,7 +126,7 @@ Shader "My Shaders/Skin Shader 2" {
 				float4  colorOfTexture = tex2D(_Texture, input.normal.xy);
 
 				//Final
-				float4 lightFinal = (diffuseShading + specularShading);
+				float4 lightFinal = (diffuseShading + specularShading) ;
 
 				return lightFinal;
 			}
@@ -160,12 +159,10 @@ Shader "My Shaders/Skin Shader 2" {
 				};
 
 				struct vertexShaderOut {
-					//float4 color : TEXCOORD0;
 					float4 pos : SV_POSITION;
 					float3 normal : NORMAL;
-					float4 colorOfTexture : TEXCOORD1;
-					float3 worldVertPos : TEXCOORD2;
-
+					float4 colorOfTexture : TEXCOORD0;
+					float3 worldVertPos : TEXCOORD1;
 				};
 
 				vertexShaderOut vertexShader(vertexShaderIn input) {
@@ -187,7 +184,7 @@ Shader "My Shaders/Skin Shader 2" {
 					//Calculate strenght of other lights than directional
 					if (_WorldSpaceLightPos0.w != 0.0) {
 						float distance = length(lightPosition - input.worldVertPos);
-						lightStrength = 1.0 / distance;
+						lightStrength = 1/pow(distance, 5);
 						lightPosition = normalize(lightPosition - input.worldVertPos);
 					}
 					else {
@@ -195,20 +192,28 @@ Shader "My Shaders/Skin Shader 2" {
 					}
 
 					//Difuse shading
-					float4 diffuseShading = (max(0.0, dot(normalDirection, lightPosition)) * lightStrength *_LightColor0 ); // dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
-
+					float4 diffuseShading = lightStrength * max(0.0, (dot(normalDirection, lightPosition))) * _LightColor0 ; // dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
+					/*
 					//Specular Shading
-					float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) * lightStrength * _LightColor0 * _specularColor;
+					float4 specularShading = lightStrength * pow( max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) * _LightColor0;
 
 					//Texture
 					float4 colorOfTexture = tex2D(_Texture, input.normal.xy);
-
+					*/
 					//Final
-					float4 lightFinal = (diffuseShading + specularShading);
+					float4 lightFinal = diffuseShading;
 
 					return lightFinal;
 				}
 					ENDCG
 			}
+
 		}
+		Fallback "Diffuse"
 }
+
+//CG TEXCUBE
+
+// Of screen rendering (camera rendering fx for mirror)
+
+// Unity reflection probe
