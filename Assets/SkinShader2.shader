@@ -16,13 +16,17 @@ Shader "My Shaders/Skin Shader New" {
 		_specularSize("Specular Size", Range(-2, 0)) = 0.5
 
 
-
+		//Look at:
+		// for layers https://en.wikibooks.org/wiki/Cg_Programming/Unity/Layers_of_Textures
+		// Transparency https://en.wikibooks.org/wiki/Cg_Programming/Unity/Transparencys
 
 	}
 		SubShader{
 
+
 			Pass{
 			Tags{ "LightMode" = "ForwardBase" }
+
 			CGPROGRAM
 
 			//float4 _Color;
@@ -104,26 +108,31 @@ Shader "My Shaders/Skin Shader New" {
 				float4 diffuseShading = max(0.0, dot(normalDirection, lightPosition)) * _LightColor0 + UNITY_LIGHTMODEL_AMBIENT; // dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
 
 				//Specular shading
-				float4 specularMap = tex2D(_SpecularMap, input.colorOfTexture.xy);																												
-				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) *  _LightColor0 * specularMap * _specularColor * dot(normalDirection, lightPosition);
+				float4 specularMap = tex2D(_SpecularMap, input.colorOfTexture.xy);	
+				//float4 specularShading = dot(reflect(normalDirection, -lightPosition), _WorldSpaceCameraPos) * specularMap;
+				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) * _LightColor0  * _specularColor * specularMap * max(0.0, dot(normalDirection, lightPosition));
 
 				//Skin shine against light. First skin layer of "Oil"
-				float4 skinShine = max(0.0, (1 - dot(lightPosition, _WorldSpaceCameraPos))) * max(0.0, dot(normalDirection, lightPosition) * _skinShineColor) *  _skinShinePower;
+				float4 skinShine = max(0.0, (1 - dot(lightPosition, _WorldSpaceCameraPos))) * max(0.0, dot(normalDirection, lightPosition) * _skinShineColor) * _skinShinePower;
+
 
 				//Final
 				float4 lightFinal = (diffuseShading * colorOfTexture) + skinShine + specularShading;
+
+				float4 blendTest = lerp(colorOfTexture, lightFinal,  diffuseShading);
 
 				return lightFinal;
 			}
 				ENDCG
 			}
 
-			/*
+
 			//Pass for other lights than directional
-				Pass{
-					Tags{ "LightMode" = "ForwardAdd" }
-					Blend One One
-					CGPROGRAM
+			Pass{
+
+				Tags{ "LightMode" = "ForwardAdd" }
+				Blend One One
+				CGPROGRAM
 
 				//float4 _Color;
 				float4 lightDirection;
@@ -197,7 +206,7 @@ Shader "My Shaders/Skin Shader New" {
 				}
 					ENDCG
 			}
-			*/
+			
 		}
 		Fallback "Diffuse"
 		
