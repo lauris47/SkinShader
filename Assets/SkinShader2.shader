@@ -12,11 +12,14 @@ Shader "My Shaders/Skin Shader New" {
 		_specularSize("Specular Size", Range(-2, 0)) = 0.5
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 		//Look at:
 		// for layers https://en.wikibooks.org/wiki/Cg_Programming/Unity/Layers_of_Textures
 		// Transparency https://en.wikibooks.org/wiki/Cg_Programming/Unity/Transparencys
 =======
+=======
+>>>>>>> parent of 80ad9b7... SpecularMap Works
 		_skinShineColor("Skin Shine Color", Color) = (0,0,1,1)
 		_skinShinePower("Skin Shine Strength", Range(0, 1)) = 0.5
 
@@ -109,10 +112,15 @@ Shader "My Shaders/Skin Shader New" {
 				float4 diffuseShading = max(0.0, dot(normalDirection, lightPosition)) * _LightColor0 + UNITY_LIGHTMODEL_AMBIENT; // dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 				//Specular shading
 				float4 specularMap = tex2D(_SpecularMap, input.colorOfTexture.xy);	
 				//float4 specularShading = dot(reflect(normalDirection, -lightPosition), _WorldSpaceCameraPos) * specularMap;
 				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) * _LightColor0  * _specularColor * specularMap * max(0.0, dot(normalDirection, lightPosition));
+=======
+																																 //Specular Shading
+				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) *  _LightColor0 * _specularColor;
+>>>>>>> parent of 80ad9b7... SpecularMap Works
 =======
 																																 //Specular Shading
 				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) *  _LightColor0 * _specularColor;
