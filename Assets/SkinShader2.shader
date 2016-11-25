@@ -15,6 +15,7 @@ Shader "My Shaders/Skin Shader New" {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 		//Look at:
 		// for layers https://en.wikibooks.org/wiki/Cg_Programming/Unity/Layers_of_Textures
@@ -29,6 +30,8 @@ Shader "My Shaders/Skin Shader New" {
 
 >>>>>>> parent of 80ad9b7... SpecularMap Works
 =======
+=======
+>>>>>>> parent of 80ad9b7... SpecularMap Works
 		_skinShineColor("Skin Shine Color", Color) = (0,0,1,1)
 		_skinShinePower("Skin Shine Strength", Range(0, 1)) = 0.5
 
@@ -124,10 +127,15 @@ Shader "My Shaders/Skin Shader New" {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 				//Specular shading
 				float4 specularMap = tex2D(_SpecularMap, input.colorOfTexture.xy);	
 				//float4 specularShading = dot(reflect(normalDirection, -lightPosition), _WorldSpaceCameraPos) * specularMap;
 				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) * _LightColor0  * _specularColor * specularMap * max(0.0, dot(normalDirection, lightPosition));
+=======
+																																 //Specular Shading
+				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) *  _LightColor0 * _specularColor;
+>>>>>>> parent of 80ad9b7... SpecularMap Works
 =======
 																																 //Specular Shading
 				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) *  _LightColor0 * _specularColor;
