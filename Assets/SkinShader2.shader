@@ -3,22 +3,24 @@
 Shader "My Shaders/Skin Shader New" {
 	Properties{
 		_Texture("Texture", 2D) = "White" {}
-		_skinShineColor("Skin Shine Color", Color) = (1,1,0,1)
-		_skinShinePower("Skin Shine Strength", Range(0, 1)) = 0.5
 		_BumpMap("BumpMap", 2D) = "bump" {}
 		_bumpStrength("Bump Strength", Range(-1, 1)) = 0.2
 		//Create if statement, if there is no texture, so it would use color instead. 
 		//_Color("Color", Color) = (1,0,0,1)
-
-		_SpecularMap("Specular Map", 2D) = "specular" {}
-		_specularColor("Specular Color", Color) = (1,1,1,1)
-		_specularRollof("Specular Rollof", Range(10, 0.1)) = 5
+		_specularColor("Specular Color", Color) = (1,0,1,1)
+		_specularRollof("Specular Rollof", Range(0.1, 10)) = 5
 		_specularSize("Specular Size", Range(-2, 0)) = 0.5
 
+<<<<<<< HEAD
 
 		//Look at:
 		// for layers https://en.wikibooks.org/wiki/Cg_Programming/Unity/Layers_of_Textures
 		// Transparency https://en.wikibooks.org/wiki/Cg_Programming/Unity/Transparencys
+=======
+		_skinShineColor("Skin Shine Color", Color) = (0,0,1,1)
+		_skinShinePower("Skin Shine Strength", Range(0, 1)) = 0.5
+
+>>>>>>> parent of 80ad9b7... SpecularMap Works
 
 	}
 		SubShader{
@@ -38,7 +40,6 @@ Shader "My Shaders/Skin Shader New" {
 			float4 _LightColor0;
 			sampler2D _Texture;
 			sampler2D _BumpMap;
-			sampler2D _SpecularMap;
 			float lightStrength;
 			float _skinShinePower;
 			float _bumpStrength;
@@ -90,7 +91,7 @@ Shader "My Shaders/Skin Shader New" {
 				float3 cameraDirection = normalize(_WorldSpaceCameraPos);
 
 				//Texture
-				float4 colorOfTexture = tex2D(_Texture, input.colorOfTexture.xy);
+				float4  colorOfTexture = tex2D(_Texture, input.colorOfTexture.xy);
 
 				//BumMap
 				float4 bumpMap = tex2D(_BumpMap, input.colorOfTexture.xy); 
@@ -107,10 +108,15 @@ Shader "My Shaders/Skin Shader New" {
 				//Difuse shading
 				float4 diffuseShading = max(0.0, dot(normalDirection, lightPosition)) * _LightColor0 + UNITY_LIGHTMODEL_AMBIENT; // dot() will return higher value if angle is smallest, that is why objects are lit the most, in straighest line to the vertex point (they have closest to 0 angle, which will produce closest to 1 result)
 
+<<<<<<< HEAD
 				//Specular shading
 				float4 specularMap = tex2D(_SpecularMap, input.colorOfTexture.xy);	
 				//float4 specularShading = dot(reflect(normalDirection, -lightPosition), _WorldSpaceCameraPos) * specularMap;
 				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) * _LightColor0  * _specularColor * specularMap * max(0.0, dot(normalDirection, lightPosition));
+=======
+																																 //Specular Shading
+				float4 specularShading = pow(max(0.0, dot(cameraDirection, reflect(-lightPosition, normalDirection)) + _specularSize), _specularRollof) *  _LightColor0 * _specularColor;
+>>>>>>> parent of 80ad9b7... SpecularMap Works
 
 				//Skin shine against light. First skin layer of "Oil"
 				float4 skinShine = max(0.0, (1 - dot(lightPosition, _WorldSpaceCameraPos))) * max(0.0, dot(normalDirection, lightPosition) * _skinShineColor) * _skinShinePower;
